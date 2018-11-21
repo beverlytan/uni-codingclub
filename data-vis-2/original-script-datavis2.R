@@ -1,15 +1,5 @@
 # Coding club tutorial: data visualization 2 
 
-#### <a href="#hist"> 1. Customising histograms </a>
-
-#### <a href="#labs"> 2. Adding titles, subtitles, captions and axis labels </a>
-
-#### <a href="#panel"> 3. Changing the plot background </a>
-
-#### <a href="#legend"> 4. Fixing the legend and customizing colours  </a>
-
-# http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
-
 # Loading packages ---- 
 
 library(readr)
@@ -30,23 +20,30 @@ species_counts <- magic_veg %>%
 # Normal way to make a histogram in ggplot2
 
 (hist <- ggplot(species_counts, aes(x = plot)) +
-  geom_histogram() +
-  theme_bw())
+  geom_histogram())
+
+ggsave("data-vis-2/histwrong1.png")
 
 # Fixing the counts 
 
 (hist <- ggplot(species_counts, aes(x = plot, y = Species_number)) +
     geom_histogram(stat = "identity"))
 
+ggsave("data-vis-2/histwrong2.png")
+
 # Splitting the bar into the different locations, stacked
 
 (hist <- ggplot(species_counts, aes(x = plot, y = Species_number, fill = land)) +
   geom_histogram(stat = "identity"))
 
+ggsave("data-vis-2/histwrong3.png")
+
 # Splitting the bar into the different locations, not stacked
 
 (hist <- ggplot(species_counts, aes(x = plot, y = Species_number, fill = land)) +
     geom_histogram(stat = "identity", position = "dodge"))
+
+ggsave("data-vis-2/histbase.png")
 
 # Having the plot numbers show 1,2,3,4,5,6
 
@@ -54,6 +51,8 @@ species_counts <- magic_veg %>%
     geom_histogram(stat = "identity", position = "dodge") + 
     scale_y_continuous(limits = c(0, 50)) +
     scale_x_continuous(breaks = c(1,2,3,4,5,6)))
+
+ggsave("data-vis-2/histbase2.png")
 
 # Beautifying the graph: adding title, subtitle, caption, axis labels 
 
@@ -66,6 +65,8 @@ species_counts <- magic_veg %>%
          caption = "Data from the Ministry of Magic", 
          x = "Plot number", y = "Number of species"))
 
+ggsave("data-vis-2/histbeaut1a.png")
+
 (hist <- ggplot(species_counts, aes(x = plot, y = Species_number, fill = land)) +
     geom_histogram(stat = "identity", position = "dodge") +
     scale_y_continuous(limits = c(0, 50)) +
@@ -76,6 +77,8 @@ species_counts <- magic_veg %>%
           axis.title = element_text(size = 12, face = "italic"), 
           plot.title = element_text(size = 14, hjust = 0.5, face = "bold")))
 
+ggsave("data-vis-2/histbeaut1b.png")
+
 # Beautifying graph: plot background - white, and remove lines 
 
 (hist <- ggplot(species_counts, aes(x = plot, y = Species_number, fill = land)) +
@@ -85,25 +88,12 @@ species_counts <- magic_veg %>%
     labs(title = "Species richness by plot", 
          x = "\n Plot number", y = "Number of species \n") + 
     theme_bw() +
-    theme(panel.grid. = element_blank(), 
+    theme(panel.grid = element_blank(), 
           axis.text = element_text(size = 12), 
           axis.title = element_text(size = 12), 
           plot.title = element_text(size = 14, hjust = 0.5, face = "bold")))
 
-# Beautifying graph: putting a margin around the plot
-
-(hist <- ggplot(species_counts, aes(x = plot, y = Species_number, fill = land)) +
-    geom_histogram(stat = "identity", position = "dodge") +
-    scale_y_continuous(limits = c(0, 50)) +
-    scale_x_continuous(breaks = c(1,2,3,4,5,6)) + 
-    labs(title = "Species richness by plot", 
-         x = "\n Plot number", y = "Number of species \n") + 
-    theme_bw() +
-    theme(panel.grid = element_blank(), 
-          axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 12), 
-          plot.title = element_text(size = 14, hjust = 0.5, face = "bold"), 
-          plot.margin = unit(c(0.5,0.5,0.5,0.5), units = , "cm")))
+ggsave("data-vis-2/histbeaut2.png")
 
 # Beautifying the graph: fixing the legend
 
@@ -126,7 +116,11 @@ species_counts <- magic_veg %>%
           legend.position = "bottom", 
           legend.box.background = element_rect(color = "grey", size = 0.3)))
 
-ggsave("data-vis-2/histogram.png", width = 7, height = 5, dpi = 300)
+ggsave("data-vis-2/histbeaut-final.png")
+
+
+
+
 
 # Creating boxplots ---- 
 
@@ -140,6 +134,8 @@ View(yearly_counts)
 
 (boxplot <- ggplot(yearly_counts, aes(plot, Species_number, fill = land)) +
   geom_boxplot())
+
+ggsave("data-vis-2/boxbase.png")
 
 (boxplot <- ggplot(yearly_counts, aes(x = plot, y = Species_number, fill = land)) +
   geom_boxplot() +
@@ -159,7 +155,9 @@ View(yearly_counts)
         plot.margin = unit(c(0.5,0.5,0.5,0.5), units = , "cm"), 
         legend.position = "bottom", 
         legend.box.background = element_rect(color = "grey", size = 0.3)))
-  
+
+ggsave("data-vis-2/boxbeaut1.png")
+
 ggsave("data-vis-2/magical-sp-rich-boxplot1.png", width = 7, height = 5, dpi = 300)
 
 # If I wanted Narnia to come before Hogsmeade
@@ -187,6 +185,8 @@ yearly_counts$land <- factor(yearly_counts$land,
           legend.position = "bottom", 
           legend.box.background = element_rect(color = "grey", size = 0.3)))
 
+ggsave("data-vis-2/boxbeaut2.png")
+
 # If I wanted to reorder plot number to be 6 first, then 1234, 
 
 yearly_counts$plot <- factor(yearly_counts$plot, 
@@ -212,6 +212,7 @@ yearly_counts$plot <- factor(yearly_counts$plot,
           legend.position = "bottom", 
           legend.box.background = element_rect(color = "grey", size = 0.3)))
 
+ggsave("data-vis-2/boxbeaut3.png")
 
 # Mixed effect model results ----
 
@@ -242,15 +243,3 @@ summary(lm_heights)
 lm_heights2<-lme(Height ~ year, random = ~1|year/plot, data = heights[heights$land == "Narnia",])
 summary(lm_heights2)
 
-theme_coding <- function(){
-  theme_bw()+
-    theme(axis.text.x = element_text(size = 12, angle = 45, vjust = 1, hjust = 1),
-          axis.text.y = element_text(size = 12),
-          axis.title = element_text(size = 14),
-          panel.grid = element_blank(),
-          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), units = , "cm"),
-          plot.title = element_text(size = 20, vjust = 1, hjust = 0.5),
-          legend.text = element_text(size = 12, face = "italic"),
-          legend.title = element_blank(),
-          legend.position=c(0.9, 0.9))
-}
