@@ -237,6 +237,11 @@ ggplot(heights, aes(year, Height, colour = land)) +
   theme_bw() +
   stat_smooth(method = "lm")
 
+ggplot(heights, aes(year, Height, colour = land)) +
+  geom_point() +
+  theme_bw() +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2))
+
 library(nlme)
 
 # Using the square brackets to subset the data just for Hogsmeade
@@ -279,11 +284,19 @@ mm.heights <- data.frame(mm.heights,
 
 mm.heights2 <- expand.grid(year = seq(1999, 2016, 1), Height = 0)  
 
+# Create matrix of relevant effect sizes
+
 mm2 <- model.matrix(terms(lm_heights2), mm.heights2)  
+
+# Calculate height based on the relevant effect sizes
 
 mm.heights2$Height <- mm2 %*% fixef(lm_heights2)  
 
 pvar.mm.heights2 <- diag(mm2 %*% tcrossprod(vcov(lm_heights2), mm2))
+
+View(mm.heights)
+
+# Add standard errors to the dataframe
 
 mm.heights2 <- data.frame(mm.heights2, 
                           plo = mm.heights2$Height - 1.96*sqrt(pvar.mm.heights2),
@@ -325,5 +338,53 @@ ggplot(heights, aes(year, Height)) +
         legend.position = "bottom", 
         legend.box.background = element_rect(color = "grey", size = 0.3)))
   
-  
+
+## Using ggpredict! 
+
+# Original mixed effect model
+lm_heights <- lme(Height ~ year, random = ~1|year/plot, 
+                  data = heights[heights$land == "Hogsmeade",])
+
+ggpred <- ggpredict(lm_heights, terms = c("year"))
+
+summary(lm_heights)
+
+# Trying to use ggpredict, but problem, so using lmer first 
+
+with_lmer_hogs <- lmer(Height ~ year + (1|plot) + (1|year), 
+                  data = heights[heights$land == "Hogsmeade",])
+
+ggpred_hogs <- ggpredict(with_lmer_hogs, terms = c("year"))
+
+with_lmer_narn <- lmer(Height ~ year + (1|plot) + (1|year), 
+                       data = heights[heights$land == "Narnia",])
+
+ggpred_narn <- ggpredict(with_lmer_narn, terms = c("year"))
+
+heights$plot <- as.factor(heights$plot)
+
+(new_graph <- ggplot() +  
+    geom_point(data = heights, 
+               aes(x = year, y = Height, colour = land)) +
+    geom_line(data = ggpred_hogs, aes(x = x, y = predicted), 
+              colour = "#ff9999", size = 1) +
+    geom_ribbon(data = ggpred_hogs, 
+                aes(ymin = conf.low, ymax = conf.high, x = x), 
+                fill = "rosybrown1", alpha = 0.4) + 
+    geom_line(data = ggpred_narn, aes(x = x, y = predicted), 
+              colour = "#99b3ff", size = 1) +
+    geom_ribbon(data = ggpred_narn, 
+                aes(ymin = conf.low, ymax = conf.high, x = x), 
+                fill = "#deebf7", alpha = 0.4) + 
+    scale_colour_manual(values = c("#ff9999", "#99b3ff"),
+                        breaks = c("Hogsmeade","Narnia"),
+                        name = "Land of magic",
+                        labels = c("Hogsmeade","Narnia")) + 
+    labs(y = "Mean canopy height", 
+         x = "Year") + 
+    theme_bw() + 
+    theme(panel.grid = element_blank()))
+
+
+
 
