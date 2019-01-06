@@ -224,9 +224,13 @@ heights <- magic_veg %>%
   group_by(year, land, plot) %>%
   summarise(Height = mean(Max_Height))  # Calculating mean max height
 
+# Basic scatterplot 
+
 ggplot(heights, aes(year, Height, colour = land)) +
   geom_point() +
   theme_bw()
+
+# Basic scatterplot with line through 
 
 ggplot(heights, aes(year, Height, colour = land)) +
   geom_point() +
@@ -236,10 +240,90 @@ ggplot(heights, aes(year, Height, colour = land)) +
 library(nlme)
 
 # Using the square brackets to subset the data just for Hogsmeade
-lm_heights<-lme(Height ~ year, random = ~1|year/plot, data = heights[heights$land == "Hogsmeade",])
+lm_heights <- lme(Height ~ year, random = ~1|year/plot, 
+                  data = heights[heights$land == "Hogsmeade",])
+
 summary(lm_heights)
 
 # Using the square brackets to subset the data just for Narnia
-lm_heights2<-lme(Height ~ year, random = ~1|year/plot, data = heights[heights$land == "Narnia",])
+lm_heights2 <- lme(Height ~ year, random = ~1|year/plot, 
+                   data = heights[heights$land == "Narnia",])
+
 summary(lm_heights2)
+
+## Predictions for Hogsmeade
+
+# Create a blank dataset with the years we want
+
+mm.heights <- expand.grid(year = seq(1999, 2016, 1), Height = 0)  
+
+# Create matrix of relevant effect sizes
+
+mm <- model.matrix(terms(lm_heights), mm.heights)  
+
+# Calculate height based on the relevant effect sizes
+
+mm.heights$Height <- mm %*% fixef(lm_heights)  
+
+pvar.mm.heights <- diag(mm %*% tcrossprod(vcov(lm_heights), mm))
+
+# Add standard errors to the dataframe
+
+mm.heights <- data.frame(mm.heights, 
+                         plo = mm.heights$Height - 1.96*sqrt(pvar.mm.heights),
+                         phi = mm.heights$Height + 1.96*sqrt(pvar.mm.heights))  
+
+## Predictions for Narnia
+
+# Create a blank dataset with the years we want
+
+mm.heights2 <- expand.grid(year = seq(1999, 2016, 1), Height = 0)  
+
+mm2 <- model.matrix(terms(lm_heights2), mm.heights2)  
+
+mm.heights2$Height <- mm2 %*% fixef(lm_heights2)  
+
+pvar.mm.heights2 <- diag(mm2 %*% tcrossprod(vcov(lm_heights2), mm2))
+
+mm.heights2 <- data.frame(mm.heights2, 
+                          plo = mm.heights2$Height - 1.96*sqrt(pvar.mm.heights2),
+                          phi = mm.heights2$Height + 1.96*sqrt(pvar.mm.heights2)) 
+
+ggplot(heights, aes(year, Height)) +
+  geom_ribbon(data = mm.heights, mapping = aes(x = year, ymin = plo, ymax = phi)) +
+  geom_line(data = mm.heights, mapping = aes(x = year)) +
+  geom_ribbon(data = mm.heights2, mapping = aes(x = year, ymin = plo, ymax = phi)) +
+  geom_line(data = mm.heights2, mapping = aes(x = year)) +
+  geom_point(data = heights, aes(colour = factor(land))) +
+  theme_bw()
+
+(ggplot(heights, aes(year, Height)) +
+  geom_ribbon(data = mm.heights, mapping = aes(x = year, ymin = plo, ymax = phi),
+              fill = "rosybrown1", alpha = 0.4) +  
+  geom_line(data = mm.heights, mapping = aes(x = year),
+            colour = "#ff9999", size = 1) +  
+  geom_ribbon(data = mm.heights2, mapping = aes(x = year, ymin = plo, ymax = phi), 
+              fill = "#deebf7", alpha = 0.4) +
+  geom_line(data = mm.heights2, mapping = aes(x = year), 
+            colour = "#99b3ff", size = 1) +
+  geom_point(data = heights, aes(colour = factor(land)), alpha = 0.8) + 
+  scale_x_continuous(breaks = c(1999, 2004, 2009, 2013, 2014, 2015, 2016)) + 
+  scale_colour_manual(values = c("#ff9999", "#99b3ff"),
+                      breaks = c("Hogsmeade","Narnia"),
+                      name = "Land of magic",
+                      labels = c("Hogsmeade","Narnia")) + 
+  labs(title = "Change in canopy heights from 1999 - 2016 in the land of magic", 
+       x = "Year", y = "Mean canopy height") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 12), 
+        plot.title = element_text(size = 14, hjust = 0.5, face = "bold"), 
+        plot.margin = unit(c(0.5,0.5,0.5,0.5), units = , "cm"), 
+        legend.text = element_text(size = 11),
+        legend.title = element_text(face = "bold"),
+        legend.position = "bottom", 
+        legend.box.background = element_rect(color = "grey", size = 0.3)))
+  
+  
 
