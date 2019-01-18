@@ -337,17 +337,19 @@ ggplot(heights, aes(year, Height)) +
         legend.title = element_text(face = "bold"),
         legend.position = "bottom", 
         legend.box.background = element_rect(color = "grey", size = 0.3)))
-  
 
 ## Using ggpredict! 
+
+library(ggeffects)
+library(lme4)
 
 # Original mixed effect model
 lm_heights <- lme(Height ~ year, random = ~1|year/plot, 
                   data = heights[heights$land == "Hogsmeade",])
 
-ggpred <- ggpredict(lm_heights, terms = c("year"))
-
-summary(lm_heights)
+ggpred <- ggpredict(lm_heights, terms = "year")               # Doesnt work
+ggpred <- ggpredict(lm_heights, terms = c("year", "plot"))    # Doesnt work
+ggpred <- ggpredict(lm_heights, terms = c("plot", "year"))    # Doesnt work
 
 # Trying to use ggpredict, but problem, so using lmer first 
 
@@ -385,6 +387,21 @@ heights$plot <- as.factor(heights$plot)
     theme_bw() + 
     theme(panel.grid = element_blank()))
 
+
+# Trying to making it the same as Haydn's, based on Gergana's input
+
+
+test1 <- lmer(Height ~ year + (1|plot/year), 
+              data = heights[heights$land == "Hogsmeade",])
+
+test2 <- lmer(Height ~ year + (1|year/plot), 
+              data = heights[heights$land == "Hogsmeade",])
+
+test3 <- lmer(Height ~ year + (1|year:plot), 
+              data = heights[heights$land == "Hogsmeade",])
+
+test4 <- lmer(Height ~ year + (1|plot:year), 
+              data = heights[heights$land == "Hogsmeade",])
 
 
 
